@@ -1,0 +1,9 @@
+RewriteEngine On
+RewriteCond %{SERVER_PORT} 80
+RewriteRule ^(.*)$ https://web.joeyeamigh.com/$1 [R=301,L]
+Options +FollowSymLinks -MultiViews -indexes
+
+<IfModule mod_security.c>
+  SecFilterEngine Off
+  SecFilterScanPOST Off
+</IfModule>

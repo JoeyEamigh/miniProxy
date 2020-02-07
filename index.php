@@ -1,8 +1,12 @@
 <?php
+session_start();
+if (!isset($_SESSION['is_auth']) && $_SESSION['is_auth'] !== 'true') {
+  header("location:auth.php");
+}
 /*
-miniProxy - A simple PHP web proxy. <https://github.com/joshdick/miniProxy>
+miniProxxy - A simple PHP web proxy. <https://github.com/joshdick/miniProxxy>
 Written and maintained by Joshua Dick <http://joshdick.net>.
-miniProxy is licensed under the GNU GPL v3 <http://www.gnu.org/licenses/gpl.html>.
+miniProxxy is licensed under the GNU GPL v3 <http://www.gnu.org/licenses/gpl.html>.
 */
 
 /****************************** START CONFIGURATION ******************************/
@@ -25,12 +29,12 @@ $forceCORS = false;
 //Setting to false may improve compatibility with some sites, but also exposes more information about end users to proxied sites.
 $anonymize = true;
 
-//Start/default URL that that will be proxied when miniProxy is first loaded in a browser/accessed directly with no URL to proxy.
-//If empty, miniProxy will show its own landing page.
+//Start/default URL that that will be proxied when miniProxxy is first loaded in a browser/accessed directly with no URL to proxy.
+//If empty, miniProxxy will show its own landing page.
 $startURL = "";
 
-//When no $startURL is configured above, miniProxy will show its own landing page with a URL form field
-//and the configured example URL. The example URL appears in the instructional text on the miniProxy landing page,
+//When no $startURL is configured above, miniProxxy will show its own landing page with a URL form field
+//and the configured example URL. The example URL appears in the instructional text on the miniProxxy landing page,
 //and is proxied when pressing the 'Proxy It!' button on the landing page if its URL form is left blank.
 $landingExampleURL = "https://example.net";
 
@@ -39,13 +43,13 @@ $landingExampleURL = "https://example.net";
 ob_start("ob_gzhandler");
 
 if (version_compare(PHP_VERSION, "5.4.7", "<")) {
-  die("miniProxy requires PHP version 5.4.7 or later.");
+  die("miniProxxy requires PHP version 5.4.7 or later.");
 }
 
 $requiredExtensions = ["curl", "mbstring", "xml"];
 foreach($requiredExtensions as $requiredExtension) {
   if (!extension_loaded($requiredExtension)) {
-    die("miniProxy requires PHP's \"" . $requiredExtension . "\" extension. Please install/enable it on your server and try again.");
+    die("miniProxxy requires PHP's \"" . $requiredExtension . "\" extension. Please install/enable it on your server and try again.");
   }
 }
 
@@ -104,7 +108,7 @@ function makeRequest($url) {
   //Tell cURL to make the request using the brower's user-agent if there is one, or a fallback user-agent otherwise.
   $user_agent = $_SERVER["HTTP_USER_AGENT"];
   if (empty($user_agent)) {
-    $user_agent = "Mozilla/5.0 (compatible; miniProxy)";
+    $user_agent = "Mozilla/5.0 (compatible; miniProxxy)";
   }
   $ch = curl_init();
   curl_setopt($ch, CURLOPT_USERAGENT, $user_agent);
@@ -276,13 +280,13 @@ if (isset($_POST["miniProxyFormAction"])) {
 }
 if (empty($url)) {
     if (empty($startURL)) {
-      die("<html><head><title>miniProxy</title></head><body><h1>Welcome to miniProxy!</h1>miniProxy can be directly invoked like this: <a href=\"" . PROXY_PREFIX . $landingExampleURL . "\">" . PROXY_PREFIX . $landingExampleURL . "</a><br /><br />Or, you can simply enter a URL below:<br /><br /><form onsubmit=\"if (document.getElementById('site').value) { window.location.href='" . PROXY_PREFIX . "' + document.getElementById('site').value; return false; } else { window.location.href='" . PROXY_PREFIX . $landingExampleURL . "'; return false; }\" autocomplete=\"off\"><input id=\"site\" type=\"text\" size=\"50\" /><input type=\"submit\" value=\"Proxy It!\" /></form></body></html>");
+      die("<html><head><title>miniProxxy</title></head><body><h1>Welcome to miniProxxy!</h1>miniProxxy can be directly invoked like this: <a href=\"" . PROXY_PREFIX . $landingExampleURL . "\">" . PROXY_PREFIX . $landingExampleURL . "</a><br /><br />Or, you can simply enter a URL below:<br /><br /><form onsubmit=\"if (document.getElementById('site').value) { window.location.href='" . PROXY_PREFIX . "' + document.getElementById('site').value; return false; } else { window.location.href='" . PROXY_PREFIX . $landingExampleURL . "'; return false; }\" autocomplete=\"off\"><input id=\"site\" type=\"text\" size=\"50\" /><input type=\"submit\" value=\"Proxy It!\" /></form></body></html>");
     } else {
       $url = $startURL;
     }
 } else if (strpos($url, ":/") !== strpos($url, "://")) {
     //Work around the fact that some web servers (e.g. IIS 8.5) change double slashes appearing in the URL to a single slash.
-    //See https://github.com/joshdick/miniProxy/pull/14
+    //See https://github.com/joshdick/miniProxxy/pull/14
     $pos = strpos($url, ":/");
     $url = substr_replace($url, "://", $pos, strlen(":/"));
 }
@@ -293,7 +297,7 @@ if (empty($scheme)) {
     $url = "http:" . $url;
   }
 } else if (!preg_match("/^https?$/i", $scheme)) {
-    die('Error: Detected a "' . $scheme . '" URL. miniProxy exclusively supports http[s] URLs.');
+    die('Error: Detected a "' . $scheme . '" URL. miniProxxy exclusively supports http[s] URLs.');
 }
 
 //Validate the requested URL against the whitelist.
@@ -526,7 +530,7 @@ if (stripos($contentType, "text/html") !== false) {
 
   }
 
-  echo "<!-- Proxified page constructed by miniProxy -->\n" . $doc->saveHTML();
+  echo "<!-- Proxified page constructed by miniProxxy -->\n" . $doc->saveHTML();
 } else if (stripos($contentType, "text/css") !== false) { //This is CSS, so proxify url() references.
   echo proxifyCSS($responseBody, $url);
 } else { //This isn't a web page or CSS, so serve unmodified through the proxy with the correct headers (images, JavaScript, etc.)
